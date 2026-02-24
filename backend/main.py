@@ -26,19 +26,10 @@ app.add_middleware(
 # Initialize Firebase
 if not firebase_admin._apps:
     firebase_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
-    if firebase_json:
-        try:
-            cred_dict = json.loads(firebase_json)
-            cred = credentials.Certificate(cred_dict)
-        except Exception as e:
-            # Fallback to file if JSON is invalid, but log the error
-            print(f"Error parsing FIREBASE_CREDENTIALS_JSON: {e}")
-            cred_path = os.path.join(os.path.dirname(__file__), "..", "firebase-service-account.json")
-            cred = credentials.Certificate(cred_path)
-    else:
-        cred_path = os.path.join(os.path.dirname(__file__), "..", "firebase-service-account.json")
-        cred = credentials.Certificate(cred_path)
-    
+    if not firebase_json:
+        raise Exception("FIREBASE_CREDENTIALS_JSON not set")
+    cred_dict = json.loads(firebase_json)
+    cred = credentials.Certificate(cred_dict)
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
