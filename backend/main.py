@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
+import json
 from .services.feature_engine import extract_features
 from .services.inference import inference_service
 from .services.certificate import generate_certificate_pdf
@@ -23,9 +24,21 @@ app.add_middleware(
 )
 
 # Initialize Firebase
-cred_path = os.path.join(os.path.dirname(__file__), "..", "firebase-service-account.json")
 if not firebase_admin._apps:
-    cred = credentials.Certificate(cred_path)
+    firebase_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
+    if firebase_json:
+        try:
+            cred_dict = json.loads(firebase_json)
+            cred = credentials.Certificate(cred_dict)
+        except Exception as e:
+            # Fallback to file if JSON is invalid, but log the error
+            print(f"Error parsing FIREBASE_CREDENTIALS_JSON: {e}")
+            cred_path = os.path.join(os.path.dirname(__file__), "..", "firebase-service-account.json")
+            cred = credentials.Certificate(cred_path)
+    else:
+        cred_path = os.path.join(os.path.dirname(__file__), "..", "firebase-service-account.json")
+        cred = credentials.Certificate(cred_path)
+    
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
@@ -216,4 +229,4 @@ if __name__ == "__main__":
     import uvicorn
     import os
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=port)
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
