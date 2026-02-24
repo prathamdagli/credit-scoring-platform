@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pandas
+numpy
+firebase-admin
+google-cloud-firestore
+pypdf
+reportlab
+scikit-learn
+xgboost
+joblib
+python-multipart
