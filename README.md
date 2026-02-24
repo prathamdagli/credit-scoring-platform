@@ -1,4 +1,4 @@
-# 🏦 Crediscout — Pre-CIBIL Credit Readiness Platform
+# 🏦 CreditScoring — Pre-CIBIL Credit Readiness Platform
 
 > A behavior-driven, transparent alternative credit assessment framework for first-time borrowers.
 
@@ -14,7 +14,7 @@
 
 Many individuals remain **credit-invisible** despite maintaining stable income and responsible financial habits. Traditional credit systems rely heavily on past borrowing records — leaving first-time borrowers without a path forward.
 
-**Crediscout** bridges that gap by analyzing real transaction patterns from bank statements and converting behavioral financial signals into a standardized **Credit Readiness Score (0–100)**. The output is a structured score and a downloadable certificate that users can share directly with lenders.
+**CreditScoring** bridges that gap by analyzing real transaction patterns from bank statements and converting behavioral financial signals into a standardized **Credit Readiness Score (0–100)**. The output is a structured score and a downloadable certificate that users can share directly with lenders.
 
 The platform evaluates only structured financial behavior voluntarily provided by the user. It does **not** rely on passive surveillance such as SMS scraping or device tracking.
 
@@ -35,7 +35,7 @@ The platform evaluates only structured financial behavior voluntarily provided b
 ## 🏗️ Architecture
 
 ```
-CreditScout/
+CreditScoring/
 ├── frontend/        # Next.js application
 ├── backend/         # FastAPI backend
 └── ml_pipeline/     # ML training & synthetic data generation
@@ -181,7 +181,7 @@ The app will be available at `http://localhost:3000`.
 
 ```bash
 cd ml_pipeline
-python train.py
+python train_model.py
 ```
 
 This generates a synthetic dataset and saves the trained XGBoost model for inference.
@@ -191,30 +191,47 @@ This generates a synthetic dataset and saves the trained XGBoost model for infer
 ## 📂 Project Structure
 
 ```
-CreditScout/
-│
-├── frontend/
-│   ├── app/                  # Next.js App Router pages
-│   ├── components/           # Reusable UI components
-│   └── lib/                  # Firebase config, API utils
+CreditScoring/
 │
 ├── backend/
-│   ├── main.py               # FastAPI entry point & routes
-│   ├── parser/               # CSV & PDF statement parsers
-│   ├── scorer/               # Feature extraction & score mapping
-│   └── certificate/          # ReportLab certificate generator
+│   ├── __pycache__/          # Python cache files
+│   ├── models/               # ML models directory
+│   ├── services/             # Business logic services
+│   ├── __init__.py           # Package initialization
+│   └── main.py               # FastAPI entry point & routes
 │
-└── ml_pipeline/
-    ├── data_generator.py     # Synthetic banking data generator
-    ├── train.py              # Model training script
-    └── model/                # Serialized XGBoost model (joblib)
+├── frontend/
+│   ├── .next/                # Next.js build output
+│   ├── node_modules/         # npm dependencies
+│   ├── public/               # Static assets
+│   ├── src/                  # Source code
+│   ├── .gitignore            # Git ignore rules
+│   ├── eslint.config.mjs     # ESLint configuration
+│   ├── next-env.d.ts         # Next.js TypeScript declarations
+│   ├── next.config.ts        # Next.js configuration
+│   ├── package-lock.json     # npm lock file
+│   ├── package.json          # npm dependencies
+│   ├── postcss.config.mjs    # PostCSS configuration
+│   ├── README.md             # Frontend documentation
+│   └── tsconfig.json         # TypeScript configuration
+│
+├── ml_pipeline/
+│   ├── data/                 # Training data directory
+│   ├── models/               # Trained ML models
+│   ├── generate_synthetic_data.py  # Data generation script
+│   └── train_model.py        # Model training script
+│
+├── firebase-service-account.json  # Firebase credentials
+├── Project_Comprehensive_Manual.txt  # Project documentation
+├── README.md                 # Main project README
+└── run_backend.ps1           # PowerShell script to run backend
 ```
 
 ---
 
 ## 🎯 Objective
 
-Crediscout aims to create a **scalable, transparent, and behavior-driven** alternative credit assessment framework — enabling first-time borrowers to demonstrate financial responsibility before accessing traditional credit systems, without relying on borrowing history they don't yet have.
+CreditScoring aims to create a **scalable, transparent, and behavior-driven** alternative credit assessment framework — enabling first-time borrowers to demonstrate financial responsibility before accessing traditional credit systems, without relying on borrowing history they don't yet have.
 
 ---
 
