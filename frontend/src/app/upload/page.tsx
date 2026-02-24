@@ -46,7 +46,7 @@ export default function UploadPage() {
 
         try {
             const token = await user.getIdToken();
-            await axios.post("http://localhost:8001/api/upload", formData, {
+            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                     Authorization: `Bearer ${token}`,

@@ -25,7 +25,7 @@ export default function AnalyticsPage() {
             setLoading(true);
             try {
                 const token = await user.getIdToken();
-                const res = await axios.get('http://localhost:8001/api/dashboard', {
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setData(res.data);

@@ -24,10 +24,10 @@ export default function DashboardPage() {
         try {
             const token = await user.getIdToken();
             const [dashRes, historyRes] = await Promise.all([
-                axios.get("http://localhost:8001/api/dashboard", {
+                axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard`, {
                     headers: { Authorization: `Bearer ${token}` }
                 }),
-                axios.get("http://localhost:8001/api/scores", {
+                axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/scores`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
@@ -52,7 +52,7 @@ export default function DashboardPage() {
         if (!data?.id || !user) return;
         try {
             const token = await user.getIdToken();
-            const response = await axios.get(`http://localhost:8001/api/certificate/${data.id}`, {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/certificate/${data.id}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 responseType: 'blob'
             });
