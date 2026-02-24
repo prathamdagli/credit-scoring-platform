@@ -7,9 +7,9 @@ from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 import json
-from .services.feature_engine import extract_features
-from .services.inference import inference_service
-from .services.certificate import generate_certificate_pdf
+from services.feature_engine import extract_features
+from services.inference import inference_service
+from services.certificate import generate_certificate_pdf
 from fastapi.responses import Response
 
 app = FastAPI(title="Crediscout API")
@@ -88,7 +88,7 @@ async def upload_transactions(
             
             df = pd.DataFrame(data)
             
-        from .services.feature_engine import map_columns, is_feature_dataframe, process_feature_dataframe
+        from services.feature_engine import map_columns, is_feature_dataframe, process_feature_dataframe
         
         # Check if it's already a feature-engineered dataframe (e.g., test_1.csv)
         if is_feature_dataframe(df):

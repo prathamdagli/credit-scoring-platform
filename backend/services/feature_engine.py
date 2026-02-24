@@ -37,7 +37,7 @@ def is_feature_dataframe(df: pd.DataFrame):
 
 def process_feature_dataframe(df: pd.DataFrame):
     """Converts a feature-laden dataframe into the format expected by the predict service."""
-    from .inference import ML_FEATURE_NAMES
+    from services.inference import ML_FEATURE_NAMES
     
     # Extract the first row as the representative vector
     row = df.iloc[0].to_dict()
