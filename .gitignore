@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+*.env
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+
+# ML
+ml_pipeline/trained_models/
+ml_pipeline/synthetic_data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+serviceAccountKey.json
+
+firebase-service-account.json
+*.pkl
+backend/models/
+ml_pipeline/models/

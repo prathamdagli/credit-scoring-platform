@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #F8F9FB;
+  --color-foreground: #1C1C1C;
+  --color-primary: #0F2B46;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #2E7D6E;
+  --color-secondary-foreground: #FFFFFF;
+  --color-accent: #1E3A5F;
+  --color-accent-foreground: #FFFFFF;
+  --color-muted: #F3F4F6;
+  --color-muted-foreground: #6B7280;
+  --color-border: #E5E7EB;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1C1C1C;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    @apply antialiased;
+  }
+}
+
+.banking-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.banking-button-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  transition: background-color 0.2s;
+}
+
+.banking-button-primary:hover {
+  background-color: #1E3A5F;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}

@@ -1,0 +1,206 @@
+
+CREDISCOUT // PRE-CIBIL CREDIT READINESS PLATFORM
+SUPREME MASTER BLUEPRINT & PROJECT MANIFEST
+VERSION 7.0
+
+TABLE OF CONTENTS
+1.  EXECUTIVE SUMMARY & PROJECT MISSION
+2.  THE PROBLEM SPACE: "THIN-FILE" CREDIT INVISIBILITY
+3.  CORE TECHNOLOGY STACK (THE ARCHITECTURAL PILLARS)
+4.  FRONTEND ARCHITECTURE: NEXT.JS 14 & APP ROUTER LOGIC
+5.  DETAILED PAGE SPECIFICATIONS & DESIGN INTENT
+6.  THE DESIGN SYSTEM: "TECH-NOIR" COSMETIC SPECIFICATION
+7.  BACKEND INFRASTRUCTURE: FASTAPI & ASYNC ORCHESTRATION
+8.  API SPECIFICATION: ENDPOINTS, HANDLERS & RESPONSE MODELS
+9.  THE AUTHENTICATION HANDSHAKE: TOKEN LIFECYCLE & SECURITY
+10. FIRESTORE DATABASE SCHEMA: COLLECTIONS & DOCUMENT MODELS
+11. THE MACHINE LEARNING ENGINE: XGBOOST & DATA ANALYSIS
+12. FEATURE ENGINEERING: ANALYZING TRANSACTIONAL NODES
+13. SYNTHETIC DATA GENERATION: THE BEHAVIORAL SIMULATOR
+14. EXPENDITURE AUDIT LOGIC: CREDIT IMPACT METRICS
+15. SCORING PROTOCOL: THE 12-MONTH BEHAVIORAL WINDOW
+16. CERTIFICATE GENERATION: PDF COMPOSITING & DATA PROOF
+17. SYSTEM HYGIENE: THE "FRESH START" PROTOCOL TO AVOID ERRORS
+18. CODING STANDARDS & TECHNICAL DEBT MANAGEMENT
+19. SECURITY POLICY & DATA COMPLIANCE
+20. DEVELOPER ONBOARDING: INSTALLATION & ENV SETUP
+21. DEPLOYMENT CHECKLIST & PRODUCTION READINESS
+22. THE ROADMAP: SCALABILITY & FUTURE NODE INTEGRATION
+
+1. EXECUTIVE SUMMARY & PROJECT MISSION
+Crediscout is a production-grade Financial Technology platform designed as a 
+professional-tier behavioral assessment tool. It targets the "Thin-File" 
+gap—the millions of people who have steady income and stable financial habits 
+but no traditional credit score (CIBIL). 
+
+The platform analyzes raw, verified financial data (Bank Statements) using 
+Machine Learning to generate a surrogated "Credit Readiness Score," effectively 
+translating day-to-day discipline into a metric lenders can understand.
+
+MISSION:
+"To digitize and verify financial responsibility, empowering the unbanked 
+through behavioral data transparency."
+
+2. THE PROBLEM SPACE: "THIN-FILE" CREDIT INVISIBILITY
+In traditional banking, "no data" is often treated as "bad data." Individuals 
+without loans or credit cards find it nearly impossible to get approved for 
+their first credit product. 
+
+Crediscout solves this by:
+- INGESTION: Securely taking in 12 months of transactional data.
+- VERIFICATION: Confirming income sources and recurring obligations.
+- SCORING: Using XGBoost to predict future stability based on historical nodes.
+
+3. CORE TECHNOLOGY STACK (THE ARCHITECTURAL PILLARS)
+The stack is chosen for maximum performance, security, and developer speed.
+
+FRONTEND:
+- Framework: Next.js 14.x (React 18).
+- Language: TypeScript (Strict mode enabled).
+- Styling: PostCSS + TailwindCSS + Custom Vanilla CSS.
+- SDK: Firebase Web JS SDK v10.x.
+
+BACKEND:
+- Framework: FastAPI (Uvicorn ASGI).
+- Language: Python 3.10+.
+- Admin SDK: Firebase Admin SDK (Server privileged access).
+- Math Engine: Pandas, NumPy, Scikit-learn.
+- PDF Engine: FPDF / ReportLab.
+
+4. FRONTEND ARCHITECTURE: NEXT.JS 14 & APP ROUTER LOGIC
+The frontend follows the "App Router" paradigm, ensuring efficient server-side 
+rendering (SSR) and SEO-optimized structures.
+
+DESIGN PRINCIPLE: 
+"Fast, Dark, and Precise." Every page is a "Client Component" (`'use client'`) 
+to handle the dynamic interaction required for Firebase SDK calls.
+
+5. DETAILED PAGE SPECIFICATIONS & DESIGN INTENT
+- PAGE 1: LANDING HUB (`/`)
+  - Intent: First-impression "Tech-Noir" wow factor.
+- PAGE 2: IDENTITY GATE (`/login`)
+  - Intent: Secure, encrypted feel for authentication.
+- PAGE 3: COMMAND CENTER (`/dashboard`)
+  - Intent: Quick-glance visibility of financial health.
+- PAGE 4: INGESTION PORTAL (`/upload`)
+  - Intent: Frictionless data entry.
+- PAGE 5: DEEP AUDIT (`/expenditures`)
+  - Intent: Transparency in the scoring process.
+
+6. THE DESIGN SYSTEM: "TECH-NOIR" COSMETIC SPECIFICATION
+BRAND COLORS:
+- Void Background: `#050505`
+- Slate Contrast: `#0f172a`
+- Neon Accent: `#06b6d4`
+- Danger/Error: `#f43f5e`
+
+TYPOGRAPHY:
+- Header: 'Inter', Black (900), tracking-tighter.
+- Body: 'Inter', Medium (500), slate-400.
+
+7. BACKEND INFRASTRUCTURE: FASTAPI & ASYNC ORCHESTRATION
+The backend is a high-concurrency API layer designed to process massive 
+transactional datasets in background threads.
+
+SECURITY MIDDLEWARE:
+- `backend/core/security.py` enforces JWT verification on every restricted path.
+
+8. API SPECIFICATION: ENDPOINTS, HANDLERS & RESPONSE MODELS
+- `POST /api/auth/register`
+- `GET /api/auth/me`
+- `POST /api/upload`
+- `GET /api/score/generate`
+- `GET /api/score/dashboard`
+- `GET /api/expenditures/summary`
+
+9. THE AUTHENTICATION HANDSHAKE: TOKEN LIFECYCLE & SECURITY
+1. LOGIN -> 2. RECEIVE JWT -> 3. SAVE TO LOCALSTORAGE -> 4. SEND AS BEARER 
+
+10. FIRESTORE DATABASE SCHEMA: COLLECTIONS & DOCUMENT MODELS
+- `users`: `{ uid, email, first_name, last_name, status, created_at }`
+- `bank_accounts`: `{ id, user_id, bank_name }`
+- `transactions`: `{ id, account_id, date, amount, type, category }`
+- `credibility_scores`: `{ id (uid), current_score, risk_tier }`
+
+11. THE MACHINE LEARNING ENGINE: XGBOOST & DATA ANALYSIS
+- Algorithm: XGBoost Classifier.
+- Dataset: 5000+ synthetic histories.
+- Prediction: Probability of stability [0, 1].
+
+12. FEATURE ENGINEERING: ANALYZING TRANSACTIONAL NODES
+- `income_regularity`
+- `spending_velocity`
+- `commitment_fulfillment`
+
+13. SYNTHETIC DATA GENERATION: THE BEHAVIORAL SIMULATOR
+- PROFILE 2 (STABLE): High salary, zero misses.
+- PROFILE 1 (MODERATE): Mid salary, 5% misses.
+- PROFILE 0 (RISKY): Low salary, 20% misses.
+
+14. EXPENDITURE AUDIT LOGIC: CREDIT IMPACT METRICS
+- INCOME CONSISTENCY: ratio > 0.8
+- FULFILLMENT: timeliness > 0.9
+
+15. SCORING PROTOCOL: THE 12-MONTH BEHAVIORAL WINDOW
+- Window: 365 days.
+- LOCK: 30 days interval.
+
+16. CERTIFICATE GENERATION: PDF COMPOSITING & DATA PROOF
+- Logic: `backend/api/certificate.py` -> `ReportLab`.
+
+17. SYSTEM HYGIENE: THE "FRESH START" PROTOCOL TO AVOID ERRORS
+1. SINGLETON SDK.
+2. DELETE .NEXT ON ENV CHANGE.
+
+18. CODING STANDARDS & TECHNICAL DEBT MANAGEMENT
+- Strict TypeScript interfaces.
+- Pydantic response models.
+
+19. SECURITY POLICY & DATA COMPLIANCE
+- TLS 1.3 for all traffic.
+- Firestore Security Rules: `auth != null`.
+
+20. DEVELOPER ONBOARDING: INSTALLATION & ENV SETUP
+- `npm install`
+- `pip install -r requirements.txt`
+- `uvicorn backend.main:app`
+
+21. DEPLOYMENT CHECKLIST & PRODUCTION READINESS
+- [X] Build checks.
+- [X] Token validation tests.
+
+22. THE ROADMAP: SCALABILITY & FUTURE NODE INTEGRATION
+- PHASE 1: Real-time API integration.
+- PHASE 2: ML Model Auto-retraining based on default data.
+
+[ADDITIONAL DETAILED NOTES ON ML MODELING]
+- Feature Extraction Logic:
+  The extraction loop iterates over the `transactions` dataframe. 
+  `salary_tx = df[df['category'] == 'SALARY']`
+  The consistency is measured as the ratio of months containing at least one 
+  salary event to the total expected 12 months. Any value below 0.6 is 
+  flagged as "Unstable Income Node".
+
+- Risk Tier Calculation:
+  Risky: Score < 40
+  Moderate: Score 40-75
+  Stable: Score > 75
+
+[ADDITIONAL DETAILED NOTES ON FRONTED LAYOUT]
+The `Header` component uses the `usePathname` hook from `next/navigation` to 
+highlight active routes. Links use the `next/link` component for prefetched 
+client-side transitions. The background uses a 1px solid border at the bottom 
+with `rgba(255, 255, 255, 0.1)` to separate it from the main view.
+
+[ADDITIONAL DETAILED NOTES ON BACKEND AUTH]
+The `verify_id_token` function returns a dictionary. We specifically pull 
+the `uid` which is then used in all Firestore `.where("user_id", "==", uid)` 
+clauses. This ensures that a user can never access another user's statement 
+data, even if they guess the document ID.
+
+[DETAILED GLOSSARY OF TERMS]
+- Node: A specific data point or logical module in the architecture.
+- Protocol: The sequence of events required to complete a transaction/action.
+- Thin-File: A user with fewer than 3 credit lines in a traditional report.
+- Ghosting: When old code survives in cached directories like `.next`.
+- Nuclear Wash: The process of deleting all local dependencies and re-installing.
