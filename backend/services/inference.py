@@ -130,9 +130,9 @@ class InferenceService:
             },
             "insights": explanations[:5],
             "signals": {
-                "wealth_discipline": round(wealth_reg * 100, 1),
-                "lifestyle_overhead": round(luxury_ratio * 100, 1),
-                "stability_buffer": round(stability_idx * 100, 1),
+                "wealth_discipline": float(round(wealth_reg * 100, 1)),
+                "lifestyle_overhead": float(round(luxury_ratio * 100, 1)),
+                "stability_buffer": float(round(stability_idx * 100, 1)),
                 "missed_signals": int(missed_commits)
             }
         }

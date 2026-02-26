@@ -174,23 +174,23 @@ def extract_features(df: pd.DataFrame):
     
     # 12. Final Features List (18 features)
     features = [
-        income_regularity,
-        avg_monthly_income,
-        income_growth_trend,
-        avg_monthly_spend,
-        discretionary_spending_ratio,
-        savings_rate,
-        rent_ratio,
-        emi_ratio,
-        commitment_fulfillment_rate,
+        float(income_regularity),
+        float(avg_monthly_income),
+        float(income_growth_trend),
+        float(avg_monthly_spend),
+        float(discretionary_spending_ratio),
+        float(savings_rate),
+        float(rent_ratio),
+        float(emi_ratio),
+        float(commitment_fulfillment_rate),
         float(expected_commits - actual_commits), # missed_commitments_count
-        spending_volatility,
-        net_cashflow_stability,
-        investment_regularity,
-        ott_regularity,
+        float(spending_volatility),
+        float(net_cashflow_stability),
+        float(investment_regularity),
+        float(ott_regularity),
         float(investment_count),
-        luxury_ratio,
-        stability_index,
+        float(luxury_ratio),
+        float(stability_index),
         float(len(ott_txns))
     ]
     
