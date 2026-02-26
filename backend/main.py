@@ -34,6 +34,23 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
+def to_native(obj):
+    """Recursively convert NumPy/Pandas types to native Python types."""
+    if isinstance(obj, dict):
+        return {k: to_native(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [to_native(i) for i in obj]
+    elif hasattr(obj, "item"): # Caught for NumPy scalars like np.float32/64
+        return obj.item()
+    elif isinstance(obj, (datetime, str, int, float, bool)) or obj is None:
+        return obj
+    else:
+        # Fallback for anything else that might have a __dict__ or just return as is
+        try:
+            return float(obj) if "float" in str(type(obj)) else int(obj) if "int" in str(type(obj)) else obj
+        except:
+            return obj
+
 async def verify_token(authorization: str = Header(...)):
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
@@ -119,7 +136,8 @@ async def upload_transactions(
             "filename": file.filename,
             "created_at": datetime.utcnow()
         }
-        score_ref.set(score_data)
+        # Sanitize data for Firestore (nuclear fix for NumPy types)
+        score_ref.set(to_native(score_data))
         
         return {
             "id": score_ref.id,

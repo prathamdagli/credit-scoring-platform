@@ -121,7 +121,7 @@ class InferenceService:
         explanations = sorted(explanations, key=lambda x: abs(x['impact']), reverse=True)
         
         return {
-            "score": round(final_score, 2),
+            "score": float(round(final_score, 2)),
             "tier": tier,
             "probabilities": {
                 "risky": float(probs[0]),
