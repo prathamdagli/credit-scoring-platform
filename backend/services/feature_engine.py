@@ -6,9 +6,9 @@ def map_columns(available_cols, assume_default=False):
     """Fuzzy maps common banking headers to our standard schema."""
     mapping = {
         'date': ['date', 'txn date', 'transaction date', 'value date', 'date of txn'],
-        'description': ['description', 'narration', 'particulars', 'remarks', 'trans details'],
+        'description': ['description', 'narration', 'particulars', 'remarks', 'trans details', 'transaction name'],
         'amount': ['amount', 'txn amt', 'transaction amount', 'value', 'withdrawal', 'deposit'],
-        'type': ['type', 'cr/dr', 'd/c', 'debit/credit', 'txn type'],
+        'type': ['type', 'cr/dr', 'd/c', 'debit/credit', 'txn type', 'payment type'],
         'category': ['category', 'txn category', 'spending type', 'head']
     }
     

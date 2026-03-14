@@ -66,14 +66,16 @@ async def upload_transactions(
     file: UploadFile = File(...), 
     user: dict = Depends(verify_token)
 ):
-    if not file.filename.endswith(('.csv', '.pdf')):
-        raise HTTPException(status_code=400, detail="Only CSV or PDF files are supported")
+    if not file.filename.endswith(('.csv', '.pdf', '.xlsx')):
+        raise HTTPException(status_code=400, detail="Only CSV, PDF, or XLSX files are supported")
     
     try:
         content = await file.read()
         
         if file.filename.endswith('.csv'):
             df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+        elif file.filename.endswith('.xlsx'):
+            df = pd.read_excel(io.BytesIO(content))
         else:
             # Basic PDF Extraction
             from pypdf import PdfReader
@@ -99,11 +101,41 @@ async def upload_transactions(
                     })
             
             if not data:
-                # Fallback for hackathon: if parsing fails, use synthetic data but mark as success 
-                # (to avoid user frustration) or raise error. Let's raise error for now.
                 raise Exception("Could not parse transactions from PDF. Ensure PDF is text-based.")
             
             df = pd.DataFrame(data)
+            
+        # Parse logic for the custom clean_transactions format
+        if 'Amount' in df.columns and 'Transaction Name' in df.columns:
+            # Drop empty rows
+            df = df.dropna(subset=['Amount', 'Transaction Name'])
+            
+            # Clean Amount string and infer Type
+            def parse_amount(val):
+                val_str = str(val).replace(',', '').replace('₹', '').replace('"', '').strip()
+                if '+' in val_str:
+                    return float(val_str.replace('+', '')), 'CREDIT'
+                else:
+                    return float(val_str.replace('-', '')), 'DEBIT'
+                    
+            parsed_amounts = df['Amount'].apply(parse_amount)
+            df['amount_clean'] = [x[0] for x in parsed_amounts]
+            df['type_inferred'] = [x[1] for x in parsed_amounts]
+            
+            # Re-map for the feature engine
+            df['date'] = df['Date']
+            df['description'] = df['Transaction Name']
+            df['category'] = df['Category']
+            df['amount'] = df['amount_clean']
+            df['type'] = df['type_inferred']
+            
+        elif 'amount' in df.columns and 'type' not in df.columns:
+            # Another fallback if Amount is numeric but type is missing (e.g., negative values mean debit)
+            def infer_numeric_type(val):
+                return 'CREDIT' if float(val) >= 0 else 'DEBIT'
+            df['type'] = df['amount'].apply(infer_numeric_type)
+            df['amount'] = df['amount'].abs()
+
             
         from services.feature_engine import map_columns, is_feature_dataframe, process_feature_dataframe
         
