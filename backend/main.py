@@ -10,6 +10,9 @@ import json
 from services.feature_engine import extract_features
 from services.inference import inference_service
 from services.certificate import generate_certificate_pdf
+from services.parser_service import parser_service
+from services.categorizer import categorizer_service
+from services.insights_engine import insights_engine
 from fastapi.responses import Response
 
 app = FastAPI(title="Crediscout API")
@@ -72,108 +75,58 @@ async def upload_transactions(
     try:
         content = await file.read()
         
-        if file.filename.endswith('.csv'):
-            df = pd.read_csv(io.StringIO(content.decode('utf-8')))
-        elif file.filename.endswith('.xlsx'):
-            df = pd.read_excel(io.BytesIO(content))
-        else:
-            # Basic PDF Extraction
-            from pypdf import PdfReader
-            pdf = PdfReader(io.BytesIO(content))
-            text = ""
-            for page in pdf.pages:
-                text += page.extract_text() + "\n"
-            
-            # Simple heuristic for transactions: Look for lines with dates and amounts
-            # Format: Date, Description, Amount, Type, Category
-            lines = text.split('\n')
-            data = []
-            for line in lines:
-                parts = line.split()
-                # Very simple fuzzy logic: if line has enough parts and looks like it has a date
-                if len(parts) >= 4:
-                    data.append({
-                        "date": parts[0],
-                        "description": " ".join(parts[1:-3]),
-                        "amount": float(parts[-3].replace(',', '')),
-                        "type": parts[-2].upper(),
-                        "category": parts[-1].upper()
-                    })
-            
-            if not data:
-                raise Exception("Could not parse transactions from PDF. Ensure PDF is text-based.")
-            
-            df = pd.DataFrame(data)
-            
-        # Parse logic for the custom clean_transactions format
-        if 'Amount' in df.columns and 'Transaction Name' in df.columns:
-            # Drop empty rows
-            df = df.dropna(subset=['Amount', 'Transaction Name'])
-            
-            # Clean Amount string and infer Type
-            def parse_amount(val):
-                val_str = str(val).replace(',', '').replace('₹', '').replace('"', '').strip()
-                if '+' in val_str:
-                    return float(val_str.replace('+', '')), 'CREDIT'
-                else:
-                    return float(val_str.replace('-', '')), 'DEBIT'
-                    
-            parsed_amounts = df['Amount'].apply(parse_amount)
-            df['amount_clean'] = [x[0] for x in parsed_amounts]
-            df['type_inferred'] = [x[1] for x in parsed_amounts]
-            
-            # Re-map for the feature engine
-            df['date'] = df['Date']
-            df['description'] = df['Transaction Name']
-            df['category'] = df['Category']
-            df['amount'] = df['amount_clean']
-            df['type'] = df['type_inferred']
-            
-        elif 'amount' in df.columns and 'type' not in df.columns:
-            # Another fallback if Amount is numeric but type is missing (e.g., negative values mean debit)
-            def infer_numeric_type(val):
-                return 'CREDIT' if float(val) >= 0 else 'DEBIT'
-            df['type'] = df['amount'].apply(infer_numeric_type)
-            df['amount'] = df['amount'].abs()
-
-            
-        from services.feature_engine import map_columns, is_feature_dataframe, process_feature_dataframe
+        # 1. Parse & Normalize Format
+        raw_df = parser_service.parse_file(content, file.filename)
         
-        # Check if it's already a feature-engineered dataframe (e.g., test_1.csv)
+        # 2. Categorize
+        df = categorizer_service.categorize_dataframe(raw_df)
+        
+        from services.feature_engine import is_feature_dataframe, process_feature_dataframe
+        
+        # Check if it's already a feature-engineered dataframe (e.g., test_1.csv) - mostly obsolete now
         if is_feature_dataframe(df):
             features, analytics = process_feature_dataframe(df)
         else:
             # Standard Transaction Data Path
-            col_map = map_columns(df.columns, assume_default=True)
-            if len(col_map) < 5:
-                missing = [c for c in ['date', 'description', 'amount', 'type', 'category'] if c not in col_map]
-                raise HTTPException(status_code=400, detail=f"Missing or unrecognized columns: {missing}. Found: {list(df.columns)}")
+            # No need for map_columns here since parser_service normalizes it to: date, description, amount, type
 
             # 2. Extract features & analytics
             features, analytics = extract_features(df)
         
-        # 3. Model Inference
-        result = inference_service.predict(features)
+        # 3. Fetch previous score for smoothing
+        prev_scores = db.collection("credibility_scores").where("uid", "==", user["uid"]).order_by("created_at", direction=firestore.Query.DESCENDING).limit(1).get()
+        prev_score = prev_scores[0].to_dict().get("score") if prev_scores else None
+
+        # 4. Model Inference & Insights
+        result = inference_service.predict(features, prev_score)
+        financial_insights = insights_engine.generate_insights(features)
+        loan_eligibility = insights_engine.estimate_loan_eligibility(features, result["score"])
         
-        # 4. Save to Firestore
-        score_ref = db.collection("credibility_scores").document()
+        # 5. Compile Advanced Payload
         score_data = {
-            "uid": user["uid"], # Using 'user' from Depends(verify_token)
-            "score": result["score"],
+            "uid": user["uid"],
+            "credit_score": result["score"],
+            "score": result["score"], # backward compat
+            "risk_level": result["risk_level"],
             "tier": result["tier"],
-            "probabilities": result["probabilities"],
-            "insights": result["insights"],
+            "score_components": result["score_components"],
+            "financial_insights": financial_insights,
+            "loan_eligibility": loan_eligibility,
             "features": features,
-            "analytics": analytics,
+            "spending_breakdown": analytics,
+            "analytics": analytics, # backward compat
             "filename": file.filename,
             "created_at": datetime.utcnow()
         }
+        
+        # 6. Save to Firestore
+        score_ref = db.collection("credibility_scores").document()
         # Sanitize data for Firestore (nuclear fix for NumPy types)
         score_ref.set(to_native(score_data))
         
         return {
             "id": score_ref.id,
-            **result
+            **to_native(score_data)
         }
         
     except Exception as e:
@@ -259,6 +212,59 @@ async def get_all_scores(user: dict = Depends(verify_token)):
         scores.sort(key=lambda x: x.get("created_at", ""), reverse=False)
         return scores
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from pydantic import BaseModel
+
+class SimulationRequest(BaseModel):
+    score_id: str
+    scenario: str # "increase_savings", "decrease_emi", "increase_income"
+    magnitude: float # decimal percentage string e.g. 0.10 for 10%
+
+@app.post("/api/simulate")
+async def simulate_scenario(req: SimulationRequest, user: dict = Depends(verify_token)):
+    try:
+        # Load the base score data
+        doc_ref = db.collection("credibility_scores").document(req.score_id)
+        doc = doc_ref.get()
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Score not found")
+            
+        data = doc.to_dict()
+        if data["uid"] != user["uid"]:
+            raise HTTPException(status_code=403, detail="Unauthorized")
+            
+        original_features = data["features"]
+        simulated_features = dict(original_features) # deep copy
+        
+        # Apply tweak based on scenario
+        if req.scenario == "increase_savings":
+            simulated_features['savings_rate'] = min(1.0, simulated_features['savings_rate'] * (1 + req.magnitude))
+            simulated_features['avg_monthly_savings'] = simulated_features['avg_monthly_savings'] * (1 + req.magnitude)
+        elif req.scenario == "decrease_emi":
+            simulated_features['debt_to_income_ratio'] = max(0.0, simulated_features['debt_to_income_ratio'] * (1 - req.magnitude))
+            simulated_features['fixed_commitments_ratio'] = max(0.0, simulated_features['fixed_commitments_ratio'] * (1 - req.magnitude))
+        elif req.scenario == "increase_income":
+            simulated_features['avg_monthly_income'] = simulated_features['avg_monthly_income'] * (1 + req.magnitude)
+            
+        # Re-run inference without smoothing so they see direct impact
+        sim_result = inference_service.predict(simulated_features, previous_score=None)
+        
+        difference = sim_result["score"] - data["score"]
+        if difference > 0:
+            message = f"If you {req.scenario.replace('_', ' ')} by {int(req.magnitude*100)}%, your score could increase by {difference} points to {sim_result['score']}."
+        elif difference < 0:
+            message = f"If you {req.scenario.replace('_', ' ')} by {int(req.magnitude*100)}%, your score could decrease by {abs(difference)} points to {sim_result['score']}."
+        else:
+            message = f"This change would have minimal direct impact on your core credit profile."
+        
+        return {
+            "scenario": req.scenario,
+            "simulated_score": sim_result["score"],
+            "difference": difference,
+            "message": message
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

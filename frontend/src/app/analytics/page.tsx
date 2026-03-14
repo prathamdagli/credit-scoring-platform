@@ -67,21 +67,23 @@ export default function AnalyticsPage() {
 
     // Prepare Mock Data for the charts based on real features if possible, or fallback
     // In a real app the backend would serve month-wise arrays. Here we mock what we'd see from the UI screenshot
+    const income = data.features?.avg_monthly_income ?? data.features?.[1] ?? 50000;
+    const expense = data.features?.avg_monthly_spend ?? data.features?.[3] ?? 30000;
     const monthlyData = [
-        { name: 'Oct', Income: ((data.features?.[1] || 50000) * 0.9), Expense: ((data.features?.[3] || 30000) * 1.1), Savings: ((data.features?.[1] || 50000) * 0.9) - ((data.features?.[3] || 30000) * 1.1) },
-        { name: 'Nov', Income: ((data.features?.[1] || 50000) * 1.0), Expense: ((data.features?.[3] || 30000) * 0.9), Savings: ((data.features?.[1] || 50000) * 1.0) - ((data.features?.[3] || 30000) * 0.9) },
-        { name: 'Dec', Income: ((data.features?.[1] || 50000) * 0.95), Expense: ((data.features?.[3] || 30000) * 1.2), Savings: ((data.features?.[1] || 50000) * 0.95) - ((data.features?.[3] || 30000) * 1.2) },
-        { name: 'Jan', Income: ((data.features?.[1] || 50000) * 1.1), Expense: ((data.features?.[3] || 30000) * 0.8), Savings: ((data.features?.[1] || 50000) * 1.1) - ((data.features?.[3] || 30000) * 0.8) },
-        { name: 'Feb', Income: ((data.features?.[1] || 50000) * 1.0), Expense: ((data.features?.[3] || 30000) * 1.0), Savings: ((data.features?.[1] || 50000) * 1.0) - ((data.features?.[3] || 30000) * 1.0) },
+        { name: 'Month 1', Income: (income * 0.9), Expense: (expense * 1.1), Savings: (income * 0.9) - (expense * 1.1) },
+        { name: 'Month 2', Income: (income * 1.0), Expense: (expense * 0.9), Savings: (income * 1.0) - (expense * 0.9) },
+        { name: 'Month 3', Income: (income * 0.95), Expense: (expense * 1.2), Savings: (income * 0.95) - (expense * 1.2) },
+        { name: 'Month 4', Income: (income * 1.1), Expense: (expense * 0.8), Savings: (income * 1.1) - (expense * 0.8) },
+        { name: 'Current', Income: (income * 1.0), Expense: (expense * 1.0), Savings: (income * 1.0) - (expense * 1.0) },
     ];
 
     const radarData = [
-        { subject: 'Consistency', A: (data.features?.[0] || 0) * 100, fullMark: 100 },
-        { subject: 'Savings', A: Math.min(100, Math.max(0, (data.features?.[5] || 0) * 200)), fullMark: 100 },
-        { subject: 'Commits', A: (data.features?.[8] || 0) * 100, fullMark: 100 },
-        { subject: 'Discipline', A: Math.min(100, Math.max(0, (1 - (data.features?.[4] || 0)) * 100)), fullMark: 100 },
-        { subject: 'Wealth', A: Math.min(100, (data.features?.[12] || 0) * 200), fullMark: 100 },
-        { subject: 'Stability', A: Math.min(100, (data.features?.[16] || 0) * 100), fullMark: 100 },
+        { subject: 'Consistency', A: (data.features?.income_consistency ?? data.features?.[0] ?? 0) * 100, fullMark: 100 },
+        { subject: 'Savings', A: Math.min(100, Math.max(0, (data.features?.savings_rate ?? data.features?.[5] ?? 0) * 200)), fullMark: 100 },
+        { subject: 'Commits', A: (data.features?.fixed_commitments_ratio ?? data.features?.[8] ?? 0) * 100, fullMark: 100 },
+        { subject: 'Discipline', A: Math.min(100, Math.max(0, (data.features?.spending_discipline ?? (1 - (data.features?.[4] || 0))) * 100)), fullMark: 100 },
+        { subject: 'Wealth', A: Math.min(100, (data.features?.investment_activity_present ?? data.features?.[12] ?? 0) * 200), fullMark: 100 },
+        { subject: 'Stability', A: Math.min(100, (data.features?.balance_stability ?? data.features?.[16] ?? 0) * 100), fullMark: 100 },
     ];
 
     return (

@@ -5,6 +5,7 @@ import { useAuth } from "@/app/providers";
 import { useRouter } from "next/navigation";
 import ScoreGauge from "@/components/ScoreGauge";
 import AIInsights from "@/components/AIInsights";
+import SimulationWidget from "@/components/SimulationWidget";
 import axios from "axios";
 import { FileDown, RefreshCw, AlertCircle, Loader2, LayoutDashboard, TrendingUp, ChevronRight, Shield, List } from "lucide-react";
 import { motion } from "framer-motion";
@@ -171,10 +172,10 @@ export default function DashboardPage() {
                 {/* Financial Snapshot */}
                 <div className="col-span-1 lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: 'Avg Monthly Income', value: `₹${(data.features?.[1] || 0).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
-                        { label: 'Avg Monthly Spend', value: `₹${(data.features?.[3] || 0).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: LayoutDashboard, color: 'text-rose-600', bg: 'bg-rose-50' },
-                        { label: 'Monthly Savings', value: `₹${((data.features?.[1] || 0) - (data.features?.[3] || 0)).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: Shield, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                        { label: 'Savings Rate', value: `${((data.features?.[5] || 0) * 100).toFixed(1)}%`, icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                        { label: 'Avg Monthly Income', value: `₹${(data.features?.avg_monthly_income ?? data.features?.[1] ?? 0).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
+                        { label: 'Avg Monthly Spend', value: `₹${(data.features?.avg_monthly_spend ?? data.features?.[3] ?? 0).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: LayoutDashboard, color: 'text-rose-600', bg: 'bg-rose-50' },
+                        { label: 'Monthly Savings', value: `₹${(data.features?.avg_monthly_savings ?? ((data.features?.[1] || 0) - (data.features?.[3] || 0))).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: Shield, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                        { label: 'Savings Rate', value: `${((data.features?.savings_rate ?? data.features?.[5] ?? 0) * 100).toFixed(1)}%`, icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                     ].map((card, idx) => (
                         <div key={idx} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
                             <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center mb-4`}>
@@ -213,27 +214,19 @@ export default function DashboardPage() {
                     </div>
                     
                     <div className="space-y-6">
-                        {[
-                            { name: 'Payment Behavior', val: (data.features?.[8] || 0) * 100, color: 'bg-emerald-500' },
-                            { name: 'Income Stability', val: (data.features?.[0] || 0) * 100, color: 'bg-blue-500' },
-                            { name: 'Savings & Cushion', val: Math.min(100, Math.max(0, (data.features?.[5] || 0) * 200)), color: 'bg-indigo-500' },
-                            { name: 'Spending Discipline', val: Math.min(100, Math.max(0, (1 - (data.features?.[4] || 0)) * 100)), color: 'bg-amber-500' }
-                        ].map((comp, idx) => (
-                            <div key={idx}>
-                                <div className="flex justify-between text-sm font-bold mb-2">
-                                    <span className="text-gray-700">{comp.name}</span>
-                                    <span className="text-gray-900">{comp.val.toFixed(0)}/100</span>
+                        {data.score_components ? data.score_components.map((comp: any, idx: number) => (
+                            <div key={idx} className="border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+                                <div className="flex justify-between text-sm font-bold mb-1">
+                                    <span className="text-gray-900">{comp.name}</span>
+                                    <span className={comp.impact > 0 ? "text-emerald-600" : "text-rose-600"}>
+                                        {comp.impact > 0 ? `+${comp.impact}` : comp.impact} pts
+                                    </span>
                                 </div>
-                                <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                                    <motion.div 
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${comp.val}%` }}
-                                        transition={{ duration: 1, delay: 0.2 * idx }}
-                                        className={`h-full ${comp.color} rounded-full`}
-                                    />
-                                </div>
+                                <p className="text-xs text-gray-500">{comp.description}</p>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-sm text-gray-500">No score components available in snapshot.</div>
+                        )}
                     </div>
                 </div>
 
@@ -245,40 +238,43 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        {[
-                            { name: 'Home Loan', eligible: data.score > 650, amount: 'Up to ₹50L' },
-                            { name: 'Personal Loan', eligible: data.score > 500, amount: 'Up to ₹5L' },
-                            { name: 'Car Loan', eligible: data.score > 550, amount: 'Up to ₹10L' },
-                            { name: 'Credit Card', eligible: data.score > 600, amount: 'Pre-approved' },
-                        ].map((loan, idx) => (
-                            <div key={idx} className={`p-4 rounded-2xl border ${loan.eligible ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="font-bold text-gray-900">{loan.name}</span>
-                                    {loan.eligible ? 
-                                        <div className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xs">✓</div> : 
-                                        <div className="w-6 h-6 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-xs">✕</div>
-                                    }
+                        {(data.loan_eligibility || []).map((loan: any, idx: number) => {
+                            const isEligible = loan.status === 'Eligible' || loan.status === 'Check Quotes' || String(loan.status).includes('High');
+                            return (
+                                <div key={idx} className={`p-4 rounded-2xl border ${isEligible ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-bold text-gray-900 text-sm">{loan.type}</span>
+                                        {isEligible ? 
+                                            <div className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xs">✓</div> : 
+                                            <div className="w-6 h-6 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-xs">✕</div>
+                                        }
+                                    </div>
+                                    <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${isEligible ? 'text-emerald-700' : 'text-gray-500'}`}>
+                                        {loan.status}
+                                    </p>
+                                    <p className={`text-sm font-medium ${isEligible ? 'text-emerald-900' : 'text-gray-500'}`}>
+                                        {loan.estimate}
+                                    </p>
                                 </div>
-                                <p className={`text-sm font-medium ${loan.eligible ? 'text-emerald-700' : 'text-gray-500'}`}>
-                                    {loan.eligible ? loan.amount : 'Not Eligible Yet'}
-                                </p>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>
 
             {/* Bottom Row: AI Insights & Transaction History */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
-                <div className="bg-[#1e2329] p-8 rounded-3xl shadow-xl text-white">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20">
+                <div className="col-span-1 bg-[#1e2329] p-8 rounded-3xl shadow-xl text-white flex flex-col">
                      <div className="flex items-center gap-2 mb-6">
                         <div className="w-1.5 h-6 bg-emerald-400 rounded-full"></div>
                         <h2 className="text-xl font-bold text-white">AI Financial Insights</h2>
                     </div>
-                    <AIInsights insights={data.insights} />
+                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <AIInsights insights={data.financial_insights || data.insights || []} />
+                    </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
+                <div className="col-span-1 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
                      <div className="flex items-center gap-2 mb-6">
                         <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
                         <h2 className="text-xl font-bold text-gray-900">Recent Transactions</h2>
@@ -318,6 +314,10 @@ export default function DashboardPage() {
                            View Full History <ChevronRight size={16} />
                        </Link>
                     </div>
+                </div>
+
+                <div className="col-span-1 flex flex-col h-full">
+                    <SimulationWidget scoreId={data.id} currentScore={data.score} />
                 </div>
             </div>
         </div>

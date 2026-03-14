@@ -12,9 +12,17 @@ export default function UploadPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [progress, setProgress] = useState(0);
-    const [processing, setProcessing] = useState(false);
+    const [processingStep, setProcessingStep] = useState(0);
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
+
+    const steps = [
+        "Uploading Document",
+        "Parsing Custom Formats",
+        "Categorizing Intelligence",
+        "Extracting Behaviors",
+        "Computing Score"
+    ];
 
     React.useEffect(() => {
         if (!authLoading && !user) {
@@ -46,6 +54,13 @@ export default function UploadPage() {
 
         try {
             const token = await user.getIdToken();
+            
+            // Start simulated progression for UX
+            setProcessingStep(1);
+            const interval = setInterval(() => {
+                setProcessingStep(prev => prev < 4 ? prev + 1 : prev);
+            }, 1500);
+
             await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -57,18 +72,17 @@ export default function UploadPage() {
                 },
             });
 
-            // Verification Step: Wait to ensure Firestore consistency
-            setProgress(100);
-            setProcessing(true);
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            clearInterval(interval);
+            setProcessingStep(4);
+            await new Promise(resolve => setTimeout(resolve, 800));
 
             router.push("/dashboard");
         } catch (err: any) {
             setError(err.response?.data?.detail || "Upload failed. Please try again.");
             setProgress(0);
+            setProcessingStep(0);
         } finally {
             setLoading(false);
-            setProcessing(false);
         }
     };
 
@@ -135,7 +149,7 @@ export default function UploadPage() {
                     {loading ? (
                         <>
                             <Loader2 className="w-6 h-6 animate-spin" />
-                            <span>{processing ? "Securing Signals..." : `Analyzing Behavior (${progress}%)`}</span>
+                            <span>{steps[processingStep]}...</span>
                         </>
                     ) : (
                         <>
@@ -145,7 +159,25 @@ export default function UploadPage() {
                     )}
                 </button>
 
-                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                {loading && (
+                    <div className="pt-6 pb-2">
+                        <div className="flex justify-between mb-2">
+                            {steps.map((step, idx) => (
+                                <div key={idx} className={cn("text-[10px] font-bold uppercase transition-all duration-500", idx <= processingStep ? "text-primary" : "text-muted-foreground/30")}>
+                                    {step}
+                                </div>
+                            ))}
+                        </div>
+                        <div className="w-full h-2 bg-secondary/20 rounded-full overflow-hidden">
+                            <div 
+                                className="h-full bg-primary transition-all duration-500 ease-out" 
+                                style={{ width: `${Math.max(5, (processingStep / (steps.length - 1)) * 100)}%` }} 
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex items-center justify-center gap-2 text-muted-foreground pt-4">
                     <Shield className="w-4 h-4" />
                     <span className="text-[10px] uppercase font-bold tracking-widest">End-to-End Encrypted & Secure Upload</span>
                 </div>
@@ -164,7 +196,7 @@ export default function UploadPage() {
                     </li>
                     <li className="flex items-center space-x-2">
                         <div className="w-1.5 h-1.5 bg-secondary rounded-full" />
-                        <span>Required: date, amount, description, type, category</span>
+                        <span>Date, amount, description highly recommended</span>
                     </li>
                     <li className="flex items-center space-x-2">
                         <div className="w-1.5 h-1.5 bg-secondary rounded-full" />

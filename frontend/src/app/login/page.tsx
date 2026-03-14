@@ -6,7 +6,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfi
 import { useRouter } from "next/navigation";
 import { Shield, Mail, Lock, User as UserIcon, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/app/providers";
 
 export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(true);
@@ -16,6 +16,13 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const router = useRouter();
+    const { user, loading: authLoading } = useAuth();
+
+    React.useEffect(() => {
+        if (user && !authLoading) {
+            router.push("/dashboard");
+        }
+    }, [user, authLoading, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

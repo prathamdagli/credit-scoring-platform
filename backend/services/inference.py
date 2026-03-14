@@ -1,142 +1,133 @@
-import joblib
-import pandas as pd
-import shap
-import os
-import numpy as np
+import math
 
-# Feature names in order used during training
-# Feature names used during training (Strict 12)
-ML_FEATURE_NAMES = [
-    "income_regularity", "avg_monthly_income", "income_growth_trend",
-    "avg_monthly_spend", "discretionary_spending_ratio", "savings_rate",
-    "rent_ratio", "emi_ratio", "commitment_fulfillment_rate",
-    "missed_commitments_count", "spending_volatility", "net_cashflow_stability"
-]
-
-# Total signals analyzed (18)
-ALL_SIGNAL_NAMES = ML_FEATURE_NAMES + [
-    "investment_regularity", "ott_regularity", "investment_count",
-    "luxury_ratio", "stability_index", "ott_count"
-]
-
-class InferenceService:
-    def __init__(self, model_path: str):
-        self.model = joblib.load(model_path)
-        self._explainer = None
-    
-    @property
-    def explainer(self):
-        if self._explainer is None:
-            try:
-                # Explain using the 12 ML features
-                self._explainer = shap.TreeExplainer(self.model)
-            except Exception as e:
-                try:
-                    dummy_data = pd.DataFrame([[0.5] * len(ML_FEATURE_NAMES)], columns=ML_FEATURE_NAMES)
-                    self._explainer = shap.TreeExplainer(self.model, dummy_data)
-                except:
-                    self._explainer = "DISABLED"
-        return self._explainer
-    
-    def predict(self, features: list):
-        # features list is 18 elements from feature_engine
-        if len(features) < len(ALL_SIGNAL_NAMES):
-            features = features + [0.0] * (len(ALL_SIGNAL_NAMES) - len(features))
-            
-        # Separate ML features (index 0-11) for the model
-        ml_features = features[:12]
-        X_ml = pd.DataFrame([ml_features], columns=ML_FEATURE_NAMES)
+class RealisticInferenceService:
+    def __init__(self):
+        self.BASELINE_SCORE = 650 # Standard starting neutral score
+        self.MIN_SCORE = 300
+        self.MAX_SCORE = 900
         
-        # Base ML Prediction
-        probs = self.model.predict_proba(X_ml)[0]
-        base_score = (probs[2] * 1.0 + probs[1] * 0.5) * 100
+    def predict(self, features: dict, previous_score: float = None) -> dict:
+        """
+        Calculates a realistic credit-like score using heuristics derived from the features.
+        Never collapses to zero. Changes gradually if previous_score is provided.
+        """
+        bonus_points = 0
+        penalty_points = 0
+        components_explanation = []
         
-        # --- Multi-Dimensional Post-Processing ---
-        # Using full 18 signals
-        missed_commits = features[9]
-        wealth_reg = features[12]
-        wealth_count = features[14]
-        luxury_ratio = features[15]
-        stability_idx = features[16]
-        ott_reg = features[13]
-        
-        penalty = 0
-        bonus = 0
-        
-        # 1. Wealth & Consistency (Beyond SIP)
-        if wealth_count > 0:
-            if wealth_reg < 0.8:
-                penalty += (1.0 - wealth_reg) * 35 # Heavy penalty for broken investment patterns
+        # Helper to add explanations
+        def add_component(name, impact, description=None):
+            nonlocal bonus_points, penalty_points
+            if impact > 0:
+                bonus_points += impact
             else:
-                bonus += 12 # Reward for wealth creation discipline
-                
-        # 2. Lifestyle Bias (Luxury spending)
-        if luxury_ratio > 0.3: # >30% on luxury
-            penalty += (luxury_ratio - 0.3) * 50 # Exponential-like penalty for high luxury
+                penalty_points += abs(impact)
+            components_explanation.append({
+                "name": name,
+                "impact": impact,
+                "description": description or name
+            })
+
+        # 1. Income Stability
+        if features['income_consistency'] > 0.8:
+            inc_impact = +25
+            add_component("Income Stability", inc_impact, "Highly consistent income stream")
+        elif features['income_consistency'] < 0.4:
+            inc_impact = -15
+            add_component("Income Volatility", inc_impact, "Irregular income patterns detected")
+        else:
+            inc_impact = +10
+            add_component("Income Stability", inc_impact, "Moderate income consistency")
+
+        # 2. Savings Behavior
+        sr = features['savings_rate']
+        if sr > 0.3:
+            add_component("Savings Behavior", +30, "Excellent savings rate (>30%)")
+        elif sr > 0.15:
+            add_component("Savings Behavior", +15, "Healthy savings rate")
+        elif sr < 0.05:
+            add_component("Low Savings", -20, "Savings rate is critically low")
             
-        # 3. Stability & Liquidity (Emergency Fund proxy)
-        if stability_idx > 0.4: # Saving 40% of spend value as net monthly
-            bonus += 8
-        elif stability_idx < 0: # Living beyond means
-            penalty += 10
+        # 3. Debt Burden (DTI)
+        dti = features['debt_to_income_ratio']
+        if features['recurring_emi_presence'] > 0:
+            if dti > 0.5:
+                add_component("Debt Burden", -40, "High debt burden (>50% of income)")
+            elif dti > 0.35:
+                add_component("Debt Burden", -15, "Moderate debt obligations")
+            else:
+                add_component("Debt Management", +20, "Healthy debt-to-income ratio")
+        else:
+            add_component("No Debt", +5, "No visible EMI obligations")
+
+        # 4. Investment & Insurance Activity
+        if features['investment_activity_present'] > 0:
+            add_component("Investment Activity", +15, "Active wealth building")
+        else:
+            add_component("Low Investment Activity", -5, "No explicit investment transactions found")
             
-        # 4. Habitual Commits (OTT/Subs)
-        if ott_reg > 0.8:
-            bonus += 4 # Reward for "small" discipline
-            
-        # 5. Hard Penalties
-        penalty += missed_commits * 8
+        if features['insurance_presence'] > 0:
+            add_component("Risk Management", +10, "Insurance payments detected")
+
+        # 5. Spending Discipline
+        sd = features['spending_discipline']
+        if sd > 0.6:
+            add_component("Spending Discipline", +20, "High ratio of fixed to discretionary spending")
+        elif sd < 0.3:
+            add_component("Excessive Discretionary Spend", -15, "High non-essential spending")
+
+        # 6. Payment Discipline (Heuristic: no late fees, bounced checks. Here inferred from balance stability)
+        if features['balance_stability'] > 0.2:
+             add_component("Payment Discipline", +15, "Stable positive balance after expenses")
+        elif features['balance_stability'] < 0:
+             add_component("Liquidity Risk", -25, "Expenses regularly exceed income")
+
+        # Compute Raw Target Score
+        target_score = self.BASELINE_SCORE + bonus_points - penalty_points
         
-        # --- Distribution Recalibration ---
-        raw_final = (base_score * 0.8) - penalty + bonus
+        # Bound it strictly
+        target_score = max(self.MIN_SCORE, min(self.MAX_SCORE, target_score))
         
-        # Apply CIBIL-like saturation (Harder to get 100)
-        if raw_final > 85:
-            raw_final = 85 + (raw_final - 85) * 0.25
+        # Smoothing Logic (Exponential Moving Average)
+        # Prevents dramatic fluctuations if a bad month is uploaded.
+        if previous_score is not None:
+            SMOOTHING_FACTOR = 0.3 # New data influences score by 30%
+            final_score = (previous_score * (1 - SMOOTHING_FACTOR)) + (target_score * SMOOTHING_FACTOR)
+        else:
+            final_score = target_score
             
-        final_score = max(0, min(100, raw_final))
+        # Risk Level Mapping
+        if final_score >= 750:
+            risk_level = "Excellent"
+            tier = "STABLE"
+        elif final_score >= 650:
+            risk_level = "Good"
+            tier = "MODERATE"
+        elif final_score >= 550:
+            risk_level = "Fair"
+            tier = "MODERATE" # Keeping enum compatibility for older frontend if needed
+        else:
+            risk_level = "Poor"
+            tier = "RISKY"
+            
+        # Ensure components trace to score exactly for UI rendering mathematically
+        diff = final_score - self.BASELINE_SCORE
+        # Normalize the components to exactly match the diff visually
+        total_raw_impact = sum(c['impact'] for c in components_explanation)
+        if total_raw_impact != 0:
+             scale = diff / total_raw_impact if (total_raw_impact * diff > 0) else 1.0 # only scale if same sign
+             for c in components_explanation:
+                 c['impact'] = round(c['impact'] * scale)
         
-        # Tiers
-        if final_score > 85: tier = "STABLE"
-        elif final_score > 60: tier = "MODERATE"
-        else: tier = "RISKY"
+        # Sort components by absolute impact magnitude
+        components_explanation = sorted(components_explanation, key=lambda x: abs(x['impact']), reverse=True)
             
-        # SHAP Insights (Top 5)
-        explanations = []
-        if self.explainer != "DISABLED":
-            try:
-                shap_raw = self.explainer.shap_values(X_ml)
-                target_base = shap_raw[2] if isinstance(shap_raw, list) else shap_raw
-                arr = np.squeeze(np.array(target_base))
-                target_shap = arr.flatten()[:len(ML_FEATURE_NAMES)]
-                for name, val in zip(ML_FEATURE_NAMES, target_shap):
-                    impact = float(val)
-                    explanations.append({
-                        "feature": name.replace("_", " ").title(),
-                        "impact": impact,
-                        "positive": impact > 0
-                    })
-            except: pass
-            
-        explanations = sorted(explanations, key=lambda x: abs(x['impact']), reverse=True)
-        
         return {
-            "score": float(round(final_score, 2)),
+            "score": int(round(final_score)),
+            "risk_level": risk_level,
             "tier": tier,
-            "probabilities": {
-                "risky": float(probs[0]),
-                "moderate": float(probs[1]),
-                "stable": float(probs[2])
-            },
-            "insights": explanations[:5],
-            "signals": {
-                "wealth_discipline": float(round(wealth_reg * 100, 1)),
-                "lifestyle_overhead": float(round(luxury_ratio * 100, 1)),
-                "stability_buffer": float(round(stability_idx * 100, 1)),
-                "missed_signals": int(missed_commits)
-            }
+            "score_components": components_explanation,
+            "baseline_used": self.BASELINE_SCORE
         }
 
-# Singleton instance
-model_path = os.path.join(os.path.dirname(__file__), "..", "models", "model.pkl")
-inference_service = InferenceService(model_path)
+inference_service = RealisticInferenceService()
