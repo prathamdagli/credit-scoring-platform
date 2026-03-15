@@ -98,7 +98,8 @@ class ParserService:
             std_df['type'] = ['CREDIT' if c > 0 else 'DEBIT' for c in std_df['credit'].fillna(0)]
             
         elif 'amount' in col_map:
-            raw_amt_series = df[col_map['amount']].astype(str)
+            # fillna('') is strictly required before astype(str) because Pandas mixed type Series may retain np.nan as a float object.
+            raw_amt_series = df[col_map['amount']].fillna('').astype(str)
             
             # Clean and infer from sign (+/-) if type column is missing
             clean_amts = []
@@ -119,7 +120,7 @@ class ParserService:
             std_df['amount'] = clean_amts
             
             if 'type' in col_map:
-                std_df['type'] = df[col_map['type']].astype(str).str.upper().str.strip()
+                std_df['type'] = df[col_map['type']].fillna('').astype(str).str.upper().str.strip()
                 # Overwrite UNKNOWNs
                 std_df['type'] = std_df.apply(lambda row: 'CREDIT' if 'CR' in row['type'] or 'IN' in row['type'] else 'DEBIT', axis=1)
             else:
@@ -153,34 +154,30 @@ class ParserService:
         return self.normalize_dataframe(df)
         
     def _parse_pdf(self, content: bytes) -> pd.DataFrame:
-        """Enhanced PDF extraction relying on robust fuzzy spacing matching."""
-        from pypdf import PdfReader
-        pdf = PdfReader(io.BytesIO(content))
-        text = ""
-        for page in pdf.pages:
-            text += page.extract_text() + "\n"
-            
-        # Very rough fallback text to structural dataframe converter
-        lines = text.split('\n')
-        data = []
-        for line in lines:
-            parts = line.split()
-            # If line seems to start with a date and end with numerics
-            if len(parts) >= 4 and re.match(r'\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4}', parts[0]):
-                try: # try to parse the last element as amount
-                    amt = float(parts[-1].replace(',', '').replace('₹', ''))
-                    desc = " ".join(parts[1:-1])
-                    data.append({
-                        "Date": parts[0],
-                        "Description": desc,
-                        "Amount": amt
-                    })
-                except:
-                    pass
-                    
-        if not data:
+        """Enhanced PDF extraction relying explicitly on pdfplumber for real table data extraction."""
+        import pdfplumber
+        import io
+        
+        all_rows = []
+        with pdfplumber.open(io.BytesIO(content)) as pdf:
+            for page in pdf.pages:
+                tables = page.extract_tables()
+                if not tables:
+                     continue
+                
+                # Assume the largest structured table is the bank statement table
+                # Often the first row is header. We just concatenate everything and let the normalizer figure it out.
+                for table in tables:
+                     for row in table:
+                          if not row or all(cell is None or str(cell).strip() == '' for cell in row):
+                              continue
+                          # Clean newlines from cells
+                          cleaned_row = [str(cell).replace('\n', ' ').strip() if cell is not None else '' for cell in row]
+                          all_rows.append(cleaned_row)
+                          
+        if not all_rows:
             raise ValueError("Could not extract a readable transaction table from the PDF. Scanned PDFs are not supported.")
             
-        return pd.DataFrame(data)
+        return pd.DataFrame(all_rows)
 
 parser_service = ParserService()
