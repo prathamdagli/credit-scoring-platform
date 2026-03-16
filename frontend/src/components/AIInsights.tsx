@@ -7,15 +7,15 @@ import { cn } from "@/lib/utils";
 
 interface Insight {
     feature: string;
-    impact: number;
+    impact: string;
     positive: boolean;
 }
 
 interface AIInsightsProps {
-    insights: string[];
+    insights: Insight[];
 }
 
-const AIInsights = ({ insights }: AIInsightsProps) => {
+const AIInsights = ({ insights = [] }: AIInsightsProps) => {
     return (
         <div className="space-y-6">
             <div className="flex items-center space-x-2 text-indigo-400 mb-4">
@@ -33,12 +33,22 @@ const AIInsights = ({ insights }: AIInsightsProps) => {
                         className="flex items-start p-4 bg-indigo-900/40 rounded-xl border border-indigo-500/20 shadow-sm"
                     >
                         <div className="flex-shrink-0 mt-0.5">
-                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                                <TrendingUp className="w-3.5 h-3.5" />
+                            <div className={cn(
+                                "w-6 h-6 rounded-full flex items-center justify-center",
+                                insight.positive ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                            )}>
+                                {insight.positive ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                             </div>
                         </div>
                         <div className="ml-4 flex-1">
-                            <p className="text-sm font-medium text-indigo-100 leading-relaxed">{insight}</p>
+                            <p className="text-xs font-bold uppercase tracking-wider text-indigo-300 mb-1">{insight.feature}</p>
+                            <p className="text-sm font-medium text-indigo-100 leading-relaxed">{insight.impact}</p>
+                            <p className={cn(
+                                "text-[10px] font-bold mt-2 uppercase tracking-widest",
+                                insight.positive ? "text-emerald-400" : "text-rose-400"
+                            )}>
+                                {insight.positive ? "Positive Impact" : "Needs Improvement"}
+                            </p>
                         </div>
                     </motion.div>
                 )) : (

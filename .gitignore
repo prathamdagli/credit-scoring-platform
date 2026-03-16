@@ -26,3 +26,8 @@ firebase-service-account.json
 *.pkl
 backend/models/
 ml_pipeline/models/
+
+# Data and Tests
+*.pdf
+*.csv
+test_*.py

@@ -6,31 +6,59 @@ class InsightsEngine:
         sr = features.get('savings_rate', 0)
         if sr < 0.15:
             target = "20%"
-            insights.append(f"Your savings rate is currently {int(sr*100)}%. Increasing it to {target} could improve your credit score.")
+            insights.append({
+                "feature": "Savings Rate",
+                "impact": f"Your savings rate is currently {int(sr*100)}%. Increasing it to {target} could improve your credit score.",
+                "positive": False
+            })
         elif sr > 0.3:
-            insights.append("Excellent savings rate! Your strong cash reserves contribute heavily to your positive stability score.")
+            insights.append({
+                "feature": "Savings Rate",
+                "impact": "Excellent savings rate! Your strong cash reserves contribute heavily to your positive stability score.",
+                "positive": True
+            })
             
         # 2. EMI Burden Insight
         dti = features.get('debt_to_income_ratio', 0)
         if dti > 0.35:
-            insights.append(f"Your EMI payments consume {int(dti*100)}% of income. Reducing this below 35% improves future loan eligibility.")
+            insights.append({
+                "feature": "EMI Burden",
+                "impact": f"Your EMI payments consume {int(dti*100)}% of income. Reducing this below 35% improves future loan eligibility.",
+                "positive": False
+            })
             
         # 3. Income Consistency Insight
         ic = features.get('income_consistency', 0)
         if ic > 0.8:
-            insights.append("Consistent monthly income detected. This significantly improves your financial stability score.")
+            insights.append({
+                "feature": "Income Stability",
+                "impact": "Consistent monthly income detected. This significantly improves your financial stability score.",
+                "positive": True
+            })
         elif ic < 0.4:
-            insights.append("High income variability detected. Smoothing out irregular inflows could stabilize your scoring trajectory.")
+            insights.append({
+                "feature": "Income Stability",
+                "impact": "High income variability detected. Smoothing out irregular inflows could stabilize your scoring trajectory.",
+                "positive": False
+            })
             
         # 4. Expenditure / Discretionary insight
         sd = features.get('spending_discipline', 0)
         if sd < 0.4:
-            insights.append("High ratio of discretionary spending seen. Redirecting some towards investments can boost your wealth building components.")
+            insights.append({
+                "feature": "Spending Discipline",
+                "impact": "High ratio of discretionary spending seen. Redirecting some towards investments can boost your wealth building components.",
+                "positive": False
+            })
             
         # 5. Investments Insight
         inv_active = features.get('investment_activity_present', 0)
         if inv_active == 0:
-            insights.append("Starting automated investments (like SIPs) will add a positive wealth-creation multiplier to your behavioral score.")
+            insights.append({
+                "feature": "Wealth Creation",
+                "impact": "Starting automated investments (like SIPs) will add a positive wealth-creation multiplier to your behavioral score.",
+                "positive": False
+            })
             
         return insights[:4] # Keep top 4 most relevant insights
 
