@@ -29,35 +29,55 @@
 
 .banking-card {
   background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(15, 43, 70, 0.05);
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 20px -5px rgba(15, 43, 70, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.banking-card:hover {
+  box-shadow: 0 10px 30px -5px rgba(15, 43, 70, 0.1);
+  border-color: rgba(15, 43, 70, 0.1);
+}
+
+.fintech-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.premium-gradient {
+  background: linear-gradient(135deg, #0F2B46 0%, #1E3A5F 100%);
 }
 
 .banking-button-primary {
   background-color: var(--color-primary);
   color: var(--color-primary-foreground);
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  border-radius: 0.75rem;
 }
 
 .banking-button-primary:hover {
   background-color: #1E3A5F;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(15, 43, 70, 0.2);
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-background);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-muted);
+  background: rgba(15, 43, 70, 0.1);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent);
+  background: var(--color-primary);
 }

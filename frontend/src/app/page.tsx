@@ -3,9 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart3, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, ShieldCheck, Zap, BookOpen } from "lucide-react";
+import { useAuth } from "@/app/providers";
 
 export default function LandingPage() {
+  const { user } = useAuth();
+  
   return (
     <div className="flex flex-col items-center justify-center space-y-20 py-20 px-4 animate-in fade-in duration-1000">
       {/* Hero Section */}
@@ -37,15 +40,19 @@ export default function LandingPage() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link
-            href="/login"
+            href={user ? "/dashboard" : "/login"}
             className="group flex items-center space-x-2 banking-button-primary px-10 py-4 rounded-xl font-bold transition-all hover:scale-[1.02]"
           >
             <span>Access Platform</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
-          <button className="px-10 py-4 rounded-xl font-bold border-2 border-border text-primary hover:bg-muted transition-colors">
-            Our Methodology
-          </button>
+          <Link
+            href="/methodology"
+            className="px-10 py-4 rounded-xl font-bold border-2 border-border text-primary hover:bg-muted transition-colors flex items-center gap-2"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>Our Methodology</span>
+          </Link>
         </motion.div>
 
         <div className="flex items-center justify-center gap-6 pt-4 text-muted-foreground/60">

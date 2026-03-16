@@ -93,9 +93,16 @@ async def upload_transactions(
             # 2. Extract features & analytics
             features, analytics = extract_features(df)
         
-        # 3. Fetch previous score for smoothing
-        prev_scores = db.collection("credibility_scores").where("uid", "==", user["uid"]).order_by("created_at", direction=firestore.Query.DESCENDING).limit(1).get()
-        prev_score = prev_scores[0].to_dict().get("score") if prev_scores else None
+        # 3. Fetch previous score for smoothing (Sort in memory to avoid mandatory composite indexing)
+        all_prev = db.collection("credibility_scores").where("uid", "==", user["uid"]).stream()
+        prev_docs = []
+        for d in all_prev:
+            prev_docs.append(d.to_dict())
+            
+        prev_score = None
+        if prev_docs:
+            prev_docs.sort(key=lambda x: x.get("created_at", datetime.min), reverse=True)
+            prev_score = prev_docs[0].get("score")
 
         # 4. Model Inference & Insights
         result = inference_service.predict(features, prev_score)

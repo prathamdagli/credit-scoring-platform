@@ -2,11 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, PieChart, User, LogOut, Upload } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
-import { useAuth } from '@/app/providers';
+import { LayoutDashboard, PieChart, User, LogOut, Upload, BookOpen, Shield } from 'lucide-react';
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -20,68 +16,78 @@ export default function Navbar() {
 
     if (loading) return null;
 
-    if (!user) {
-        return (
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-border shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-bold text-white">C</div>
-                        <span className="font-bold text-xl tracking-tight text-primary">CREDISCOUT</span>
-                    </Link>
-                </div>
-            </nav>
-        );
-    }
-
-    const navItems = [
+    const authenticatedItems = [
         { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
         { name: 'Analytics', path: '/analytics', icon: PieChart },
-        { name: 'Update Data', path: '/upload', icon: Upload },
+        { name: 'Upload', path: '/upload', icon: Upload },
         { name: 'Profile', path: '/profile', icon: User },
     ];
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-border shadow-sm">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-indigo-100/50">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                <div className="flex items-center gap-8">
-                    <Link href="/dashboard" className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-bold text-white">C</div>
-                        <span className="font-bold text-xl tracking-tight text-primary">CREDISCOUT</span>
+                <div className="flex items-center gap-10">
+                    <Link href="/" className="flex items-center gap-2 group">
+                        <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform">
+                            <Shield className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="font-black text-xl tracking-tighter text-indigo-950">CREDISCOUT</span>
                     </Link>
 
-                    <div className="hidden md:flex items-center gap-1">
-                        {navItems.map((item) => {
-                            const isActive = pathname === item.path;
-                            return (
-                                <Link
-                                    key={item.path}
-                                    href={item.path}
-                                    className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-all ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                                        {item.name}
-                                    </div>
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="nav-active"
-                                            className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary"
-                                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                                        />
-                                    )}
-                                </Link>
-                            );
-                        })}
-                    </div>
+                    {user && (
+                        <div className="hidden md:flex items-center gap-1">
+                            {authenticatedItems.map((item) => {
+                                const isActive = pathname === item.path;
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        href={item.path}
+                                        className={`relative px-4 py-2 rounded-xl text-sm font-bold transition-all ${isActive ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <item.icon size={16} strokeWidth={2.5} />
+                                            {item.name}
+                                        </div>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="nav-active"
+                                                className="absolute bottom-1 left-4 right-4 h-0.5 bg-indigo-600 rounded-full"
+                                                transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                            />
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
 
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-muted-foreground hover:text-error transition-colors"
-                >
-                    <LogOut size={18} />
-                    <span className="hidden sm:inline">Logout</span>
-                </button>
+                <div className="flex items-center gap-4">
+                    <Link 
+                        href="/methodology" 
+                        className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${pathname === '/methodology' ? 'text-indigo-600 bg-indigo-50' : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'}`}
+                    >
+                        <BookOpen size={16} strokeWidth={2.5} />
+                        <span>Methodology</span>
+                    </Link>
+
+                    {user ? (
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all border border-transparent hover:border-rose-100"
+                        >
+                            <LogOut size={16} strokeWidth={2.5} />
+                            <span className="hidden sm:inline">Logout</span>
+                        </button>
+                    ) : (
+                        <Link
+                            href="/login"
+                            className="bg-indigo-600 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all active:scale-95"
+                        >
+                            Log In
+                        </Link>
+                    )}
+                </div>
             </div>
         </nav>
     );

@@ -135,68 +135,86 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 bg-gray-50/30 min-h-screen">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-8">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Dashboard</h1>
-                    <p className="text-sm font-medium text-gray-500 mt-1">NODE_ID: {data.id.slice(0, 8)}</p>
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 bg-[#F8F9FB] min-h-screen">
+            {/* Professional Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-10 border-b border-indigo-100/50 pb-8">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                        <div className="px-3 py-1 bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+                            <Shield className="w-3 h-3" />
+                            <span>Verified Institutional Rating</span>
+                        </div>
+                        <span className="text-slate-300">|</span>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Snapshot: {new Date().toLocaleDateString('en-GB')}</p>
+                    </div>
+                    <h1 className="text-4xl font-black tracking-tighter text-indigo-950">Financial Intelligence <span className="text-indigo-500">Report</span></h1>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        System Authority: <span className="text-indigo-600">Crediscout V2.0 Engine</span>
+                        <span className="text-slate-300">•</span>
+                        Node Index: <span className="text-slate-800">{data.id.slice(0, 8).toUpperCase()}</span>
+                    </p>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={fetchData}
-                        className="p-2.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm"
+                        className="p-3 rounded-2xl border border-indigo-100 bg-white hover:bg-slate-50 transition-all shadow-sm group active:scale-95"
+                        title="Re-synchronize Data"
                     >
-                        <RefreshCw className="w-4 h-4 text-emerald-600" />
+                        <RefreshCw className="w-4 h-4 text-indigo-600 group-hover:rotate-180 transition-transform duration-700" />
                     </button>
                     <button
                         onClick={handleDownloadCertificate}
-                        className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-full font-bold text-sm shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5"
+                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95"
                     >
                         <FileDown className="w-4 h-4" />
-                        <span>Download Report</span>
+                        <span>Export Certificate</span>
                     </button>
                 </div>
             </div>
 
             {/* Top Row: Score & Snapshot */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Score Overview */}
-                <div className="col-span-1 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 blur-3xl group-hover:bg-emerald-100 transition-colors" />
+                <div className="col-span-1 banking-card p-10 flex flex-col items-center justify-center relative overflow-hidden group border-indigo-100/50">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50/50 blur-3xl group-hover:bg-indigo-100/40 transition-colors" />
                     <ScoreGauge score={data.score} tier={data.tier} />
-                    <div className="mt-4 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest bg-emerald-50 text-emerald-700 uppercase border border-emerald-100">
-                        {data.tier}
+                    <div className="mt-6 px-6 py-2 rounded-2xl text-[10px] font-black tracking-[0.25em] bg-indigo-950 text-white uppercase shadow-lg">
+                        {data.tier} GRADE
                     </div>
+                    <p className="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Institutional Calibration Active</p>
                 </div>
 
                 {/* Financial Snapshot */}
                 <div className="col-span-1 lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: 'Avg Monthly Income', value: `₹${(data.features?.avg_monthly_income ?? data.features?.[1] ?? 0).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
-                        { label: 'Avg Monthly Spend', value: `₹${(data.features?.avg_monthly_spend ?? data.features?.[3] ?? 0).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: LayoutDashboard, color: 'text-rose-600', bg: 'bg-rose-50' },
-                        { label: 'Monthly Savings', value: `₹${(data.features?.avg_monthly_savings ?? ((data.features?.[1] || 0) - (data.features?.[3] || 0))).toLocaleString('en-IN', {maximumFractionDigits:0})}`, icon: Shield, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                        { label: 'Savings Rate', value: `${((data.features?.savings_rate ?? data.features?.[5] ?? 0) * 100).toFixed(1)}%`, icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                        { label: 'Monthly Inflow', value: `₹${(data.features?.avg_monthly_income ?? data.features?.[1] ?? 0).toLocaleString('en-IN')}`, icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50/50', border: 'border-indigo-100/50' },
+                        { label: 'Monthly Outflow', value: `₹${(data.features?.avg_monthly_spend ?? data.features?.[3] ?? 0).toLocaleString('en-IN')}`, icon: LayoutDashboard, color: 'text-rose-600', bg: 'bg-rose-50/50', border: 'border-rose-100/50' },
+                        { label: 'Net Retention', value: `₹${(data.features?.avg_monthly_savings ?? ((data.features?.[1] || 0) - (data.features?.[3] || 0))).toLocaleString('en-IN')}`, icon: Shield, color: 'text-emerald-600', bg: 'bg-emerald-50/50', border: 'border-emerald-100/50' },
+                        { label: 'Savings Velocity', value: `${((data.features?.savings_rate ?? data.features?.[5] ?? 0) * 100).toFixed(1)}%`, icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50/50', border: 'border-amber-100/50' },
                     ].map((card, idx) => (
-                        <div key={idx} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-                            <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center mb-4`}>
-                                <card.icon className={`w-5 h-5 ${card.color}`} />
+                        <div key={idx} className={`bg-white p-6 rounded-3xl border ${card.border} shadow-sm flex flex-col justify-between hover:shadow-xl hover:shadow-indigo-500/5 transition-all hover:-translate-y-1`}>
+                            <div className={`w-12 h-12 rounded-2xl ${card.bg} flex items-center justify-center mb-6`}>
+                                <card.icon className={`w-6 h-6 ${card.color}`} />
                             </div>
                             <div>
-                                <h4 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">{card.label}</h4>
-                                <p className="text-2xl font-black text-gray-900">{card.value}</p>
+                                <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{card.label}</h4>
+                                <p className="text-2xl font-black text-indigo-950 tracking-tighter">{card.value}</p>
                             </div>
                         </div>
                     ))}
                     
                     {/* Score Trend Mini */}
-                     <div className="col-span-2 md:col-span-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">Score History</h3>
-                            <Link href="/analytics" className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1 font-bold">
-                                FULL ANALYTICS <ChevronRight size={14} />
+                     <div className="col-span-2 md:col-span-4 bg-white p-8 rounded-3xl border border-indigo-500/5 shadow-sm flex flex-col hover:shadow-xl hover:shadow-indigo-500/5 transition-all">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <div className="w-1 h-4 bg-indigo-600 rounded-full"></div>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Historical Trajectory</h3>
+                            </div>
+                            <Link href="/analytics" className="text-[10px] text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-black tracking-widest uppercase bg-indigo-50 px-3 py-1 rounded-full transition-colors">
+                                Detailed Analysis <ChevronRight size={12} />
                             </Link>
                         </div>
-                        <div className="flex-1 w-full min-h-[100px]">
+                        <div className="flex-1 w-full min-h-[120px] opacity-80">
                             <ScoreTrendLine history={history} />
                         </div>
                     </div>
@@ -204,55 +222,64 @@ export default function DashboardPage() {
             </div>
 
              {/* Middle Row: Score Components & Loan Eligibility */}
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 {/* Score Components */}
-                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                    <div className="flex items-center gap-2 mb-8">
-                        <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
-                        <h2 className="text-xl font-bold text-gray-900">Score Components</h2>
+                <div className="banking-card p-10 border-indigo-100/50">
+                    <div className="flex items-center justify-between mb-10">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-emerald-50 rounded-xl">
+                                <Shield className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <h2 className="text-xl font-black text-indigo-950 tracking-tight">Component Rationale</h2>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Weighted Impacts</span>
                     </div>
                     
-                    <div className="space-y-6">
+                    <div className="space-y-8">
                         {data.score_components ? data.score_components.map((comp: any, idx: number) => (
-                            <div key={idx} className="border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-                                <div className="flex justify-between text-sm font-bold mb-1">
-                                    <span className="text-gray-900">{comp.name}</span>
-                                    <span className={comp.impact > 0 ? "text-emerald-600" : "text-rose-600"}>
-                                        {comp.impact > 0 ? `+${comp.impact}` : comp.impact} pts
+                            <div key={idx} className="group cursor-default">
+                                <div className="flex justify-between items-end mb-2">
+                                    <span className="text-sm font-black text-indigo-900 uppercase tracking-tight">{comp.name}</span>
+                                    <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${comp.impact > 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                                        {comp.impact > 0 ? `+${comp.impact}` : comp.impact} PTS
                                     </span>
                                 </div>
-                                <p className="text-xs text-gray-500">{comp.description}</p>
+                                <p className="text-xs text-slate-500 font-medium leading-relaxed">{comp.description}</p>
                             </div>
                         )) : (
-                            <div className="text-sm text-gray-500">No score components available in snapshot.</div>
+                            <div className="text-sm text-slate-400 italic">Analytical components localized.</div>
                         )}
                     </div>
                 </div>
 
                 {/* Loan Eligibility */}
-                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                     <div className="flex items-center gap-2 mb-8">
-                        <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
-                        <h2 className="text-xl font-bold text-gray-900">Loan Eligibility</h2>
+                <div className="banking-card p-10 border-indigo-100/50">
+                     <div className="flex items-center justify-between mb-10">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-xl">
+                                <BarChart className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <h2 className="text-xl font-black text-indigo-950 tracking-tight">Eligibility Matrix</h2>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Probability Scale</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {(data.loan_eligibility || []).map((loan: any, idx: number) => {
                             const isEligible = loan.status === 'Eligible' || loan.status === 'Check Quotes' || String(loan.status).includes('High');
                             return (
-                                <div key={idx} className={`p-4 rounded-2xl border ${isEligible ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="font-bold text-gray-900 text-sm">{loan.type}</span>
-                                        {isEligible ? 
-                                            <div className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xs">✓</div> : 
-                                            <div className="w-6 h-6 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-xs">✕</div>
-                                        }
+                                <div key={idx} className={`p-6 rounded-3xl border transition-all hover:-translate-y-1 ${isEligible ? 'bg-white border-indigo-100 shadow-lg shadow-indigo-500/5' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="font-black text-indigo-950 text-xs uppercase tracking-widest">{loan.type}</span>
+                                        <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-[10px] font-black ${isEligible ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
+                                            {isEligible ? 'A+' : 'N/A'}
+                                        </div>
                                     </div>
-                                    <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${isEligible ? 'text-emerald-700' : 'text-gray-500'}`}>
+                                    <p className={`text-[10px] font-black uppercase tracking-[0.15em] mb-2 ${isEligible ? 'text-emerald-600' : 'text-slate-400'}`}>
                                         {loan.status}
                                     </p>
-                                    <p className={`text-sm font-medium ${isEligible ? 'text-emerald-900' : 'text-gray-500'}`}>
+                                    <p className={`text-sm font-black tracking-tight ${isEligible ? 'text-indigo-900' : 'text-slate-500'}`}>
                                         {loan.estimate}
                                     </p>
                                 </div>
@@ -263,44 +290,52 @@ export default function DashboardPage() {
             </div>
 
             {/* Bottom Row: AI Insights & Transaction History */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20">
-                <div className="col-span-1 bg-[#1e2329] p-8 rounded-3xl shadow-xl text-white flex flex-col">
-                     <div className="flex items-center gap-2 mb-6">
-                        <div className="w-1.5 h-6 bg-emerald-400 rounded-full"></div>
-                        <h2 className="text-xl font-bold text-white">AI Financial Insights</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
+                <div className="col-span-1 bg-gradient-to-br from-indigo-900 to-indigo-950 p-10 rounded-[2.5rem] shadow-2xl shadow-indigo-200 text-white flex flex-col relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-3xl rounded-full" />
+                     <div className="flex items-center gap-3 mb-10 relative z-10">
+                        <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md border border-white/10">
+                            <Zap className="w-5 h-5 text-indigo-300" />
+                        </div>
+                        <h2 className="text-xl font-black text-white tracking-tight">Behavioral Insights</h2>
                     </div>
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar relative z-10">
                         <AIInsights insights={data.financial_insights || data.insights || []} />
                     </div>
                 </div>
 
-                <div className="col-span-1 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
-                     <div className="flex items-center gap-2 mb-6">
-                        <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
-                        <h2 className="text-xl font-bold text-gray-900">Recent Transactions</h2>
+                <div className="col-span-1 bg-white p-10 rounded-[2.5rem] border border-indigo-500/5 shadow-sm flex flex-col">
+                     <div className="flex items-center justify-between mb-10">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-slate-50 rounded-xl">
+                                <List className="w-5 h-5 text-slate-600" />
+                            </div>
+                            <h2 className="text-xl font-black text-indigo-950 tracking-tight">Audit Trail</h2>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recent Activity</span>
                     </div>
                     
                     <div className="flex-1 overflow-x-auto">
                         {(!data.transactions || data.transactions.length === 0) ? (
-                            <div className="text-center py-10 text-gray-500">
-                                <List className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                                <p className="font-medium">No recent transactions available</p>
+                            <div className="text-center py-10 text-slate-400">
+                                <List className="w-12 h-12 mx-auto text-slate-200 mb-4" />
+                                <p className="font-bold text-xs uppercase tracking-widest">No activity mapped</p>
                             </div>
                         ) : (
-                            <table className="w-full text-left text-sm">
+                            <table className="w-full text-left">
                                 <thead>
-                                    <tr className="border-b border-gray-100">
-                                        <th className="pb-3 text-gray-500 font-bold uppercase tracking-wider text-xs">Date</th>
-                                        <th className="pb-3 text-gray-500 font-bold uppercase tracking-wider text-xs">Description</th>
-                                        <th className="pb-3 text-gray-500 font-bold uppercase tracking-wider text-xs text-right">Amount</th>
+                                    <tr className="border-b border-indigo-50/50">
+                                        <th className="pb-4 text-slate-400 font-bold uppercase tracking-widest text-[9px]">Value Date</th>
+                                        <th className="pb-4 text-slate-400 font-bold uppercase tracking-widest text-[9px]">Description</th>
+                                        <th className="pb-4 text-slate-400 font-bold uppercase tracking-widest text-[9px] text-right">Amount</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody className="divide-y divide-indigo-50/30">
                                     {data.transactions.slice(0, 5).map((tx: any, i: number) => (
-                                        <tr key={i} className="hover:bg-gray-50 transition-colors">
-                                            <td className="py-3 text-gray-500 whitespace-nowrap">{tx.date}</td>
-                                            <td className="py-3 font-medium text-gray-800 line-clamp-1 max-w-[150px]">{tx.description}</td>
-                                            <td className={`py-3 font-bold text-right ${tx.type === 'CREDIT' ? 'text-emerald-500' : 'text-gray-900'}`}>
+                                        <tr key={i} className="hover:bg-slate-50 transition-colors group">
+                                            <td className="py-4 text-[10px] font-bold text-slate-500 whitespace-nowrap">{tx.date}</td>
+                                            <td className="py-4 font-bold text-indigo-900 text-xs truncate max-w-[120px]">{tx.description}</td>
+                                            <td className={`py-4 font-black text-xs text-right tracking-tight ${tx.type === 'CREDIT' ? 'text-emerald-600' : 'text-indigo-950'}`}>
                                                 {tx.type === 'CREDIT' ? '+' : '-'}₹{(tx.amount || 0).toLocaleString('en-IN')}
                                             </td>
                                         </tr>
@@ -309,9 +344,9 @@ export default function DashboardPage() {
                             </table>
                         )}
                     </div>
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
-                       <Link href="/clean_transactions" className="text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                           View Full History <ChevronRight size={16} />
+                    <div className="mt-6 pt-6 border-t border-indigo-50/50 flex justify-end">
+                       <Link href="/clean_transactions" className="text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 uppercase tracking-[0.15em] bg-indigo-50 px-3 py-1.5 rounded-full transition-colors">
+                           Master Ledger <ChevronRight size={14} />
                        </Link>
                     </div>
                 </div>
@@ -320,6 +355,24 @@ export default function DashboardPage() {
                     <SimulationWidget scoreId={data.id} currentScore={data.score} />
                 </div>
             </div>
+
+            {/* Disclaimer Footer */}
+            <div className="py-10 border-t border-indigo-100 flex flex-col items-center justify-center space-y-4">
+                <div className="flex items-center gap-6 text-slate-300">
+                    <Shield size={14} />
+                    <span className="text-slate-300">|</span>
+                    <BarChart size={14} />
+                    <span className="text-slate-300">|</span>
+                    <BarChart size={14} />
+                </div>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] text-center max-w-xl leading-relaxed">
+                    Institutional Disclosure: This intelligence report is generated using proprietary Crediscout algorithms. 
+                    All financial data is processed under strict 256-bit encryption. Ratings are behavioral estimates and do not 
+                    guarantee credit approval from third-party banking entities.
+                </p>
+                <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">© 2026 CREDISCOUT INSTITUTIONAL SERVICES</p>
+            </div>
         </div>
     );
+
 }
